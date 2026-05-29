@@ -1,0 +1,101 @@
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root[data-theme="dark"] {
+  --bg: #0a0e1a;
+  --text-primary: #e8e4d4;
+  --text-secondary: #888;
+  --text-tertiary: #555;
+  --text-header: #f5f0e0;
+  --gold: #c9a96e;
+  --border: rgba(255,255,255,.07);
+  --border-hover: rgba(255,255,255,.4);
+  --toggle-bg: #1a1e2e;
+  --button-bg: transparent;
+  --button-border: rgba(255,255,255,.2);
+  --button-text: #aaa;
+  --tooltip-bg: rgba(10,14,26,.97);
+  --tooltip-border: rgba(201,169,110,.4);
+}
+
+:root[data-theme="light"] {
+  --bg: #f2ede2;
+  --text-primary: #1a1205;
+  --text-secondary: #6a5a40;
+  --text-tertiary: #b0a080;
+  --text-header: #1a1205;
+  --gold: #9a6a10;
+  --border: rgba(60,40,10,.1);
+  --border-hover: rgba(150,90,20,.4);
+  --toggle-bg: #e0d8c8;
+  --button-bg: #fff;
+  --button-border: rgba(60,40,10,.2);
+  --button-text: #4a3820;
+  --tooltip-bg: rgba(242,237,226,.97);
+  --tooltip-border: rgba(154,106,16,.4);
+}
+
+body{background:var(--bg);font-family:'DM Mono',monospace;color:var(--text-primary);min-height:100vh;transition:background 0.35s, color 0.35s}
+#atlas-root{max-width:1100px;margin:0 auto;padding:20px}
+#header{padding:18px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:14px;border-bottom:1px solid var(--border);margin-bottom:0}
+#header h1{font-family:'Playfair Display',serif;font-size:26px;color:var(--text-header);letter-spacing:-.3px}
+#header .sub{font-size:11px;color:var(--text-secondary);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+#controls{display:flex;gap:6px;padding:12px 0;border-bottom:1px solid var(--border)}
+.metric-btn{font-family:'DM Mono',monospace;font-size:11px;padding:6px 16px;border:1px solid var(--button-border);background:var(--button-bg);color:var(--button-text);cursor:pointer;border-radius:3px;letter-spacing:.05em;transition:all .2s}
+.metric-btn.active{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+.metric-btn:hover:not(.active){border-color:var(--border-hover);color:var(--text-primary)}
+#main{display:flex;height:520px}
+#map-area{flex:1;position:relative}
+#map-svg{width:100%;height:100%}
+#panel{width:210px;border-left:1px solid var(--border);padding:14px;overflow-y:auto}
+#panel h3{font-size:10px;letter-spacing:.1em;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:12px}
+.rank-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .15s;border-radius:2px}
+.rank-item:hover{background:rgba(255,255,255,.04);margin:0 -4px;padding:5px 4px}
+.rank-num{font-size:10px;color:var(--text-tertiary);width:18px;text-align:right;flex-shrink:0}
+.rank-name{font-size:11px;color:var(--text-secondary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-val{font-size:11px;color:var(--gold);font-weight:500;flex-shrink:0}
+#tooltip{position:absolute;pointer-events:none;background:var(--tooltip-bg);border:1px solid var(--tooltip-border);padding:12px 16px;font-size:11px;border-radius:4px;display:none;z-index:10;min-width:180px}
+#tooltip .tt-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--text-header);margin-bottom:8px}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:24px;color:var(--text-secondary);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+#tooltip .tt-row:last-child{border-bottom:none}
+#tooltip .tt-val{color:var(--gold);font-weight:500}
+#info-bar{background:rgba(201,169,110,.06);border-top:1px solid rgba(201,169,110,.15);padding:9px 0;font-size:10px;color:var(--text-tertiary);letter-spacing:.04em}
+.legend{position:absolute;bottom:14px;left:14px;display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-tertiary)}
+.legend-grad{width:110px;height:8px;border-radius:2px}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-track {
+  width: 38px;
+  height: 20px;
+  background: var(--toggle-bg);
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.3s;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+[data-theme="light"] .toggle-track {
+  border: 1px solid rgba(60,40,10,0.1);
+}
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gold);
+  transition: transform 0.3s, background 0.3s;
+}
+[data-theme="light"] .toggle-knob { transform: translateX(18px); }
+.toggle-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  width: 28px;
+}
