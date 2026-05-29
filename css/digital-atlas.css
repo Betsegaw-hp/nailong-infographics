@@ -99,3 +99,21 @@ body{background:var(--bg);font-family:'DM Mono',monospace;color:var(--text-prima
   letter-spacing: 0.1em;
   width: 28px;
 }
+
+  .back-btn {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #c9a96e;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    transition: background 0.3s ease;
+  }
+  .back-btn:hover {
+    background: rgba(255,255,255,0.2);
+  }
