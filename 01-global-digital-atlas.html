@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Global Digital Access Atlas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0e1a;font-family:'DM Mono',monospace;color:#e8e4d4;min-height:100vh}
+#atlas-root{max-width:1100px;margin:0 auto;padding:20px}
+#header{padding:18px 0 10px;display:flex;align-items:baseline;gap:14px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:0}
+#header h1{font-family:'Playfair Display',serif;font-size:26px;color:#f5f0e0;letter-spacing:-.3px}
+#header .sub{font-size:11px;color:#888;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+#controls{display:flex;gap:6px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.metric-btn{font-family:'DM Mono',monospace;font-size:11px;padding:6px 16px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#aaa;cursor:pointer;border-radius:3px;letter-spacing:.05em;transition:all .2s}
+.metric-btn.active{background:#c9a96e;border-color:#c9a96e;color:#0a0e1a}
+.metric-btn:hover:not(.active){border-color:rgba(255,255,255,.4);color:#ddd}
+#main{display:flex;height:520px}
+#map-area{flex:1;position:relative}
+#map-svg{width:100%;height:100%}
+#panel{width:210px;border-left:1px solid rgba(255,255,255,.07);padding:14px;overflow-y:auto}
+#panel h3{font-size:10px;letter-spacing:.1em;color:#555;text-transform:uppercase;margin-bottom:12px}
+.rank-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .15s;border-radius:2px}
+.rank-item:hover{background:rgba(255,255,255,.04);margin:0 -4px;padding:5px 4px}
+.rank-num{font-size:10px;color:#555;width:18px;text-align:right;flex-shrink:0}
+.rank-name{font-size:11px;color:#ccc;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-val{font-size:11px;color:#c9a96e;font-weight:500;flex-shrink:0}
+#tooltip{position:absolute;pointer-events:none;background:rgba(10,14,26,.97);border:1px solid rgba(201,169,110,.4);padding:12px 16px;font-size:11px;border-radius:4px;display:none;z-index:10;min-width:180px}
+#tooltip .tt-name{font-family:'Playfair Display',serif;font-size:15px;color:#f5f0e0;margin-bottom:8px}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:24px;color:#aaa;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+#tooltip .tt-row:last-child{border-bottom:none}
+#tooltip .tt-val{color:#c9a96e;font-weight:500}
+#info-bar{background:rgba(201,169,110,.06);border-top:1px solid rgba(201,169,110,.15);padding:9px 0;font-size:10px;color:#666;letter-spacing:.04em}
+.legend{position:absolute;bottom:14px;left:14px;display:flex;align-items:center;gap:8px;font-size:10px;color:#555}
+.legend-grad{width:110px;height:8px;border-radius:2px}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div id="atlas-root">
+  <div id="header">
+    <div>
+      <h1>Global Digital Access Atlas</h1>
+      <div class="sub">Internet penetration &amp; connectivity — 2024</div>
+    </div>
+  </div>
+  <div id="controls">
+    <button class="metric-btn active" data-key="internet">Internet users %</button>
+    <button class="metric-btn" data-key="mobile">Mobile subscriptions / 100</button>
+    <button class="metric-btn" data-key="gdp">GDP per capita (USD k)</button>
+  </div>
+  <div id="main">
+    <div id="map-area">
+      <svg id="map-svg" viewBox="0 0 760 460"></svg>
+      <div class="legend">
+        <span id="leg-lo">0%</span>
+        <canvas class="legend-grad" id="leg-canvas" width="110" height="8"></canvas>
+        <span id="leg-hi">100%</span>
+      </div>
+      <div id="tooltip"></div>
+    </div>
+    <div id="panel">
+      <h3>Top countries</h3>
+      <div id="rank-list"></div>
+    </div>
+  </div>
+  <div id="info-bar">Click any country to explore · Data: World Bank / ITU 2024 estimates</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const DATA={internet:{label:'Internet users %',unit:'%',fmt:v=>v.toFixed(1)+'%',vals:{'840':93,'826':95,'276':92,'250':85,'380':78,'724':94,'752':97,'578':98,'208':99,'246':95,'372':91,'528':93,'56':90,'756':97,'040':88,'300':79,'620':82,'191':80,'348':89,'703':90,'705':85,'100':76,'642':76,'804':79,'112':85,'643':89,'792':83,'818':72,'504':88,'566':45,'710':68,'024':36,'834':30,'800':52,'404':29,'702':92,'458':84,'764':72,'360':79,'704':79,'116':74,'156':77,'410':97,'392':94,'036':92,'124':93,'484':78,'032':92,'076':81,'356':52,'050':39,'144':43,'586':26,'104':29,'012':71,'288':65,'646':26,'686':46,'226':50,'120':37,'706':18,'231':24,'760':35,'368':79,'364':80,'682':98,'784':100,'414':99,'512':90,'400':90,'422':87,'376':90}},mobile:{label:'Mobile subs per 100',unit:'/100',fmt:v=>v.toFixed(0)+'/100',vals:{'840':120,'826':118,'276':135,'250':113,'380':138,'724':119,'752':128,'578':110,'208':130,'246':155,'372':107,'528':126,'56':111,'756':125,'040':167,'300':118,'620':166,'191':105,'348':138,'703':141,'705':118,'100':156,'642':118,'804':134,'112':127,'643':164,'792':98,'818':98,'504':148,'566':90,'710':159,'024':46,'834':78,'800':65,'404':112,'702':148,'458':143,'764':190,'360':123,'704':140,'116':131,'156':120,'410':130,'392':144,'036':109,'124':90,'484':92,'032':146,'076':100,'356':86,'050':102,'144':149,'586':79,'104':116,'012':117,'288':128,'646':87,'686':103,'226':85,'120':85,'706':64,'231':51,'760':70,'368':97,'364':148,'682':180,'784':198,'414':210,'512':155,'400':140,'422':95,'376':145}},gdp:{label:'GDP per capita (USD k)',unit:'k',fmt:v=>'$'+v.toFixed(1)+'k',vals:{'840':76,'826':46,'276':54,'250':44,'380':36,'724':33,'752':59,'578':89,'208':67,'246':55,'372':94,'528':58,'56':47,'756':87,'040':51,'300':20,'620':25,'191':18,'348':18,'703':21,'705':28,'100':12,'642':15,'804':5,'112':7,'643':12,'792':11,'818':4,'504':4,'566':2,'710':6,'024':3,'834':1,'800':1,'404':2,'702':65,'458':12,'764':7,'360':4,'704':4,'116':2,'156':13,'410':33,'392':40,'036':55,'124':52,'484':10,'032':10,'076':8,'356':2,'050':2,'144':4,'586':2,'104':1,'012':5,'288':3,'646':1,'686':2,'226':8,'120':2,'706':1,'231':1,'760':1,'368':6,'364':7,'682':27,'784':44,'414':28,'512':18,'400':5,'422':5,'376':46}}};
+let currentMetric='internet';let currentFeatures=[];
+const svg=d3.select('#map-svg');const tooltip=document.getElementById('tooltip');const rankList=document.getElementById('rank-list');const legCanvas=document.getElementById('leg-canvas');const legCtx=legCanvas.getContext('2d');
+function getColor(val,metric){if(val==null)return'#1a1f2e';const m=DATA[metric];const allVals=Object.values(m.vals);const mn=d3.min(allVals),mx=d3.max(allVals);const t=(val-mn)/(mx-mn);return d3.interpolate('#1a2a4a','#c9a96e')(t)}
+function drawLegend(metric){const m=DATA[metric];const allVals=Object.values(m.vals);const mn=d3.min(allVals),mx=d3.max(allVals);const grad=legCtx.createLinearGradient(0,0,110,0);grad.addColorStop(0,'#1a2a4a');grad.addColorStop(1,'#c9a96e');legCtx.fillStyle=grad;legCtx.fillRect(0,0,110,8);document.getElementById('leg-lo').textContent=m.fmt(mn);document.getElementById('leg-hi').textContent=m.fmt(mx)}
+function updateRankList(metric){const m=DATA[metric];const sorted=Object.entries(m.vals).sort((a,b)=>b[1]-a[1]).slice(0,15);const nameMap={};currentFeatures.forEach(f=>{nameMap[f.id]=f.properties.name});rankList.innerHTML='';sorted.forEach(([id,val],i)=>{const name=nameMap[id]||id;const div=document.createElement('div');div.className='rank-item';div.innerHTML=`<span class="rank-num">${i+1}</span><span class="rank-name" title="${name}">${name}</span><span class="rank-val">${m.fmt(val)}</span>`;div.onclick=()=>showTooltipByID(id);rankList.appendChild(div)})}
+function showTooltip(d,event){const id=String(d.id);const name=d.properties.name||id;const m=DATA[currentMetric];const rows=Object.keys(DATA).map(mk=>{const mm=DATA[mk];const v=mm.vals[id];return`<div class="tt-row"><span>${mm.label}</span><span class="tt-val">${v!=null?mm.fmt(v):'—'}</span></div>`}).join('');tooltip.innerHTML=`<div class="tt-name">${name}</div>${rows}`;tooltip.style.display='block';const rect=document.getElementById('map-area').getBoundingClientRect();let x=event.clientX-rect.left+12;let y=event.clientY-rect.top+12;if(x+200>rect.width)x-=220;if(y+130>rect.height)y-=140;tooltip.style.left=x+'px';tooltip.style.top=y+'px'}
+function showTooltipByID(id){const feat=currentFeatures.find(f=>String(f.id)===String(id));if(feat)showTooltip(feat,{clientX:500,clientY:300})}
+function renderMap(world){const features=topojson.feature(world,world.objects.countries).features;currentFeatures=features;const proj=d3.geoNaturalEarth1().scale(155).translate([380,230]);const path=d3.geoPath(proj);svg.selectAll('path.country').remove();svg.selectAll('path.country').data(features).join('path').attr('class','country').attr('d',path).attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',0.4).attr('fill',d=>getColor(DATA[currentMetric].vals[String(d.id)],currentMetric)).style('cursor','pointer').on('mousemove',function(event,d){d3.selectAll('path.country').attr('stroke-width',0.4);d3.select(this).attr('stroke','#c9a96e').attr('stroke-width',1.5);showTooltip(d,event)}).on('mouseleave',function(){d3.select(this).attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',0.4);tooltip.style.display='none'});drawLegend(currentMetric);updateRankList(currentMetric)}
+function switchMetric(key){currentMetric=key;document.querySelectorAll('.metric-btn').forEach(b=>b.classList.toggle('active',b.dataset.key===key));svg.selectAll('path.country').transition().duration(500).attr('fill',d=>getColor(DATA[key].vals[String(d.id)],key));drawLegend(key);updateRankList(key)}
+document.querySelectorAll('.metric-btn').forEach(btn=>{btn.onclick=()=>switchMetric(btn.dataset.key)});
+document.getElementById('map-area').addEventListener('click',e=>{if(e.target===document.getElementById('map-area')||e.target===document.getElementById('map-svg'))tooltip.style.display='none'});
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(renderMap);
+</script>
+</body>
+</html>
