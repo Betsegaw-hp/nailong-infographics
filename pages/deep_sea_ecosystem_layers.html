@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ocean Depth Zones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root[data-theme="dark"] {
+    --ink: #03070e;
+    --surface: #060d18;
+    --panel: #04090f;
+    --border: rgba(30,80,140,0.18);
+    --text-primary: #c0d8f0;
+    --text-dim: #3a6080;
+    --text-faint: #1a3050;
+    --accent-bio: #50ffc0;
+    --accent-glow: rgba(80,255,192,0.15);
+
+    --sun-bg: #041830;
+    --sun-accent: #1a7acc;
+    --twi-bg: #030f1e;
+    --twi-accent: #0a4080;
+    --mid-bg: #020a14;
+    --mid-accent: #082040;
+    --aby-bg: #01060d;
+    --aby-accent: #041030;
+    --had-bg: #010408;
+    --had-accent: #02080e;
+    --gold: #c9a96e;
+    --toggle-bg: #1a1e2e;
+  }
+
+  :root[data-theme="light"] {
+    --ink: #f2ede2;
+    --surface: #faf7f0;
+    --panel: #fff;
+    --border: rgba(60,40,10,0.1);
+    --text-primary: #1a1205;
+    --text-dim: #6a5a40;
+    --text-faint: #b0a080;
+    --accent-bio: #1a7040;
+    --accent-glow: rgba(20,100,60,0.15);
+
+    --sun-bg: #e8f4f8;
+    --sun-accent: #0a5080;
+    --twi-bg: #e0e8f0;
+    --twi-accent: #1a4080;
+    --mid-bg: #d8e0e8;
+    --mid-accent: #1a3060;
+    --aby-bg: #d0d8e0;
+    --aby-accent: #1a2850;
+    --had-bg: #c8d0d8;
+    --had-accent: #1a2040;
+    --gold: #9a6a10;
+    --toggle-bg: #e0d8c8;
+  }
+
+  body {
+    background: var(--ink);
+    color: var(--text-primary);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── THEME TOGGLE ── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 12px;
+  }
+  .toggle-track {
+    width: 38px;
+    height: 20px;
+    background: var(--toggle-bg);
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.3s;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  [data-theme="light"] .toggle-track {
+    border: 1px solid rgba(60,40,10,0.1);
+  }
+  .toggle-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    transition: transform 0.3s, background 0.3s;
+  }
+  [data-theme="light"] .toggle-knob { transform: translateX(18px); }
+  .toggle-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    width: 28px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    max-width: 860px;
+    padding: 36px 32px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header h1 {
+    font-family: 'Crimson Pro', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(28px, 5vw, 44px);
+    color: #a8ccee;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+  header h1 em {
+    display: block;
+    font-style: normal;
+    font-weight: 600;
+    color: #c8e0f8;
+    font-size: 0.55em;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 4px;
+  }
+  .header-note {
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.12em;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    width: 100%;
+    max-width: 860px;
+    padding: 0 16px 40px;
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 0;
+  }
+
+  /* ── DEPTH COLUMN ── */
+  .depth-col {
+    position: relative;
+    border-right: 1px solid var(--border);
+  }
+
+  /* ── ZONE BANDS ── */
+  .zone-band {
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .zone-band::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .zone-band:hover::before, .zone-band.active::before { opacity: 1; }
+
+  .zone-band[data-zone="sun"] { background: var(--sun-bg); min-height: 120px; }
+  .zone-band[data-zone="sun"]::before { background: linear-gradient(135deg, rgba(26,122,204,0.12) 0%, transparent 60%); }
+
+  .zone-band[data-zone="twi"] { background: var(--twi-bg); min-height: 155px; }
+  .zone-band[data-zone="twi"]::before { background: linear-gradient(135deg, rgba(10,64,128,0.1) 0%, transparent 60%); }
+
+  .zone-band[data-zone="mid"] { background: var(--mid-bg); min-height: 180px; }
+  .zone-band[data-zone="mid"]::before { background: linear-gradient(135deg, rgba(8,32,64,0.12) 0%, transparent 70%); }
+
+  .zone-band[data-zone="aby"] { background: var(--aby-bg); min-height: 145px; }
+  .zone-band[data-zone="aby"]::before { background: linear-gradient(135deg, rgba(4,16,48,0.1) 0%, transparent 70%); }
+
+  .zone-band[data-zone="had"] { background: var(--had-bg); min-height: 130px; border-bottom: none; }
+  .zone-band[data-zone="had"]::before { background: linear-gradient(135deg, rgba(2,8,14,0.15) 0%, transparent 70%); }
+
+  /* Active glow border */
+  .zone-band.active {
+    border-left: 2px solid var(--accent-bio);
+    box-shadow: inset 2px 0 30px rgba(80,255,192,0.04);
+  }
+  .zone-band:not(.active) {
+    border-left: 2px solid transparent;
+  }
+
+  /* ── ZONE INNER ── */
+  .zone-inner {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 20px 20px 20px 24px;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── DEPTH MARKER ── */
+  .depth-marker {
+    flex-shrink: 0;
+    width: 52px;
+    text-align: right;
+  }
+  .depth-top {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+  .depth-bottom {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  /* ── ZONE VISUAL ── */
+  .zone-visual {
+    flex-shrink: 0;
+    width: 90px;
+    height: 80px;
+    position: relative;
+  }
+  .zone-visual svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* ── ZONE TEXT ── */
+  .zone-text { flex: 1; min-width: 0; }
+  .zone-name-label {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 2px;
+  }
+  .zone-sub-label {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .zone-teaser {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 280px;
+  }
+
+  /* ── DIVIDERS ── */
+  .zone-divider {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(10,60,100,0.5) 0%, transparent 100%);
+    margin-left: 26px;
+  }
+
+  /* ── LIGHT RAYS (sunlight zone decoration) ── */
+  .light-rays {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .ray {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, rgba(30,120,200,0.25) 0%, transparent 100%);
+    transform-origin: top center;
+  }
+
+  /* ── PARTICLE DOTS (bioluminescence) ── */
+  .particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .p-dot {
+    position: absolute;
+    border-radius: 50%;
+    animation: particlePulse var(--dur, 3s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes particlePulse {
+    0%, 100% { opacity: 0.08; transform: scale(0.8); }
+    50% { opacity: var(--max-op, 0.6); transform: scale(1); }
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100%;
+    max-height: 730px;
+    overflow-y: auto;
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-self: start;
+  }
+  .detail-panel::-webkit-scrollbar { width: 3px; }
+  .detail-panel::-webkit-scrollbar-track { background: transparent; }
+  .detail-panel::-webkit-scrollbar-thumb { background: #0a2040; border-radius: 2px; }
+
+  .dp-prompt {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text-faint);
+    line-height: 1.6;
+    text-align: center;
+    padding: 40px 0;
+    opacity: 0.7;
+  }
+
+  .dp-zone-name {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 24px;
+    font-weight: 400;
+    color: #a8ccf0;
+    line-height: 1.1;
+  }
+  .dp-depth {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .dp-temp {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    background: rgba(10,40,80,0.4);
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(20,60,100,0.3);
+    margin-top: 12px;
+  }
+  .dp-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.75;
+    margin-top: 4px;
+  }
+  .dp-species-label {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dp-species-list { display: flex; flex-direction: column; gap: 0; }
+  .dp-species-item {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(10,40,80,0.2);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dp-species-item::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-bio);
+    opacity: 0.4;
+    flex-shrink: 0;
+  }
+
+  /* Bio glow dot */
+  .bio-dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent-bio);
+    box-shadow: 0 0 8px var(--accent-bio);
+    animation: bioPulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes bioPulse {
+    0%, 100% { opacity: 0.3; box-shadow: 0 0 4px var(--accent-bio); }
+    50% { opacity: 1; box-shadow: 0 0 14px var(--accent-bio); }
+  }
+
+  /* ── CREATURE ANIMATIONS ── */
+  @keyframes bob { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4px); } }
+  @keyframes drift { 0% { transform: translateX(0px); } 50% { transform: translateX(5px); } 100% { transform: translateX(0px); } }
+  @keyframes lurePulse { 0%, 100% { opacity: 0.3; r: 3; } 50% { opacity: 1; r: 5; } }
+  @keyframes lurePulseOuter { 0%, 100% { opacity: 0.1; r: 7; } 50% { opacity: 0.4; r: 10; } }
+
+  .anim-bob { animation: bob 3s ease-in-out infinite; }
+  .anim-drift { animation: drift 4s ease-in-out infinite; }
+
+  /* ── FOOTER ── */
+  footer {
+    max-width: 860px;
+    width: 100%;
+    padding: 16px 32px 32px;
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <em>Deep Ocean</em>
+    Depth Zones
+  </h1>
+  <div class="header-note">
+    <label class="theme-toggle" for="theme-cb" aria-label="Toggle theme">
+      <div class="toggle-track">
+        <div class="toggle-knob"></div>
+      </div>
+      <span class="toggle-label" id="toggle-label">Dark</span>
+    </label>
+    <input type="checkbox" id="theme-cb" style="display:none"/>
+    0 — 11,000 m depth<br>
+    Click any zone to explore
+  </div>
+</header>
+
+<main>
+  <div class="depth-col" id="depth-col">
+
+    <!-- SUNLIGHT ZONE -->
+    <div class="zone-band active" data-zone="sun" onclick="selectZone('sun')">
+      <div class="light-rays" id="rays-sun">
+        <div class="ray" style="left:15%;height:100%;opacity:1;width:2px;transform:rotate(8deg);"></div>
+        <div class="ray" style="left:30%;height:85%;opacity:0.7;width:1px;transform:rotate(3deg);"></div>
+        <div class="ray" style="left:50%;height:70%;opacity:0.5;width:1px;transform:rotate(-4deg);"></div>
+        <div class="ray" style="left:68%;height:60%;opacity:0.4;width:1px;transform:rotate(6deg);"></div>
+        <div class="ray" style="left:82%;height:50%;opacity:0.3;width:1px;transform:rotate(-2deg);"></div>
+      </div>
+      <div class="zone-inner">
+        <div class="depth-marker">
+          <div class="depth-top">0 m</div>
+          <div class="depth-bottom">↓ 200 m</div>
+        </div>
+        <div class="zone-visual">
+          <svg viewBox="0 0 90 80">
+            <!-- dolphin -->
+            <g class="anim-bob">
+              <path d="M18 42 Q35 30 55 34 Q68 36 66 44 Q62 52 48 52 Q35 55 22 50 Q14 47 18 42Z" fill="#1a6aaa" opacity="0.75"/>
+              <path d="M18 42 Q8 38 4 46 Q9 52 18 50Z" fill="#1a6aaa" opacity="0.55"/>
+              <path d="M66 40 Q74 34 80 38 Q78 46 66 46Z" fill="#1a6aaa" opacity="0.5"/>
+            </g>
+            <!-- small fish -->
+            <ellipse class="anim-drift" cx="30" cy="68" rx="8" ry="3" fill="#2080cc" opacity="0.5" style="animation-delay:0.5s"/>
+            <ellipse class="anim-drift" cx="48" cy="72" rx="6" ry="2.5" fill="#2080cc" opacity="0.4" style="animation-delay:1.2s"/>
+            <ellipse class="anim-drift" cx="20" cy="74" rx="5" ry="2" fill="#1a70bb" opacity="0.35" style="animation-delay:0.3s"/>
+          </svg>
+        </div>
+        <div class="zone-text">
+          <div class="zone-name-label">Sunlight zone</div>
+          <div class="zone-sub-label">Epipelagic · 0–200 m</div>
+          <div class="zone-teaser">The only ocean layer where photosynthesis occurs. Home to most marine life.</div>
+        </div>
+      </div>
+    </div>
+    <div class="zone-divider"></div>
+
+    <!-- TWILIGHT ZONE -->
+    <div class="zone-band" data-zone="twi" onclick="selectZone('twi')">
+      <div class="particles">
+        <div class="p-dot" style="width:3px;height:3px;left:72%;top:30%;background:#4a9ad0;--dur:4s;--delay:0s;--max-op:0.7;"></div>
+        <div class="p-dot" style="width:2px;height:2px;left:85%;top:55%;background:#3080c0;--dur:3s;--delay:1s;--max-op:0.5;"></div>
+        <div class="p-dot" style="width:2px;height:2px;left:78%;top:70%;background:#4a9ad0;--dur:5s;--delay:0.5s;--max-op:0.6;"></div>
+      </div>
+      <div class="zone-inner">
+        <div class="depth-marker">
+          <div class="depth-top">200 m</div>
+          <div class="depth-bottom">↓ 1,000 m</div>
+        </div>
+        <div class="zone-visual">
+          <svg viewBox="0 0 90 80">
+            <!-- lanternfish body -->
+            <g class="anim-bob" style="animation-delay:0.8s">
+              <ellipse cx="50" cy="38" rx="22" ry="9" fill="#0a2a4a" opacity="0.85"/>
+              <ellipse cx="34" cy="36" r="7" fill="#070e1a" opacity="0.9"/>
+              <!-- bioluminescent dots -->
+              <circle cx="44" cy="39" r="1.8" fill="#60c0ff" opacity="0.9">
+                <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="52" cy="37" r="1.5" fill="#40aaff" opacity="0.8">
+                <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2.2s" repeatCount="indefinite" begin="0.4s"/>
+              </circle>
+              <circle cx="60" cy="39" r="1.5" fill="#60c0ff" opacity="0.7">
+                <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite" begin="0.8s"/>
+              </circle>
+            </g>
+            <!-- squid -->
+            <g class="anim-drift" style="animation-delay:1.5s; opacity:0.55">
+              <path d="M14 58 Q22 50 28 53 Q34 56 36 67 Q30 70 20 70 Q12 68 10 62 Q10 58 14 58Z" fill="#0a1e38"/>
+              <line x1="17" y1="70" x2="13" y2="78" stroke="#0a1e38" stroke-width="1.2"/>
+              <line x1="22" y1="70" x2="20" y2="79" stroke="#0a1e38" stroke-width="1.2"/>
+              <line x1="27" y1="70" x2="27" y2="79" stroke="#0a1e38" stroke-width="1.2"/>
+              <line x1="32" y1="70" x2="35" y2="78" stroke="#0a1e38" stroke-width="1.2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="zone-text">
+          <div class="zone-name-label">Twilight zone</div>
+          <div class="zone-sub-label">Mesopelagic · 200–1,000 m</div>
+          <div class="zone-teaser">Fading blue light, but no photosynthesis. Site of Earth's largest daily animal migration.</div>
+        </div>
+      </div>
+    </div>
+    <div class="zone-divider"></div>
+
+    <!-- MIDNIGHT ZONE -->
+    <div class="zone-band" data-zone="mid" onclick="selectZone('mid')">
+      <div class="particles">
+        <div class="p-dot" style="width:4px;height:4px;left:80%;top:25%;background:#50ffc0;--dur:3s;--delay:0.2s;--max-op:0.8;"></div>
+        <div class="p-dot" style="width:2px;height:2px;left:70%;top:60%;background:#50ffc0;--dur:4.5s;--delay:1s;--max-op:0.5;"></div>
+        <div class="p-dot" style="width:3px;height:3px;left:88%;top:75%;background:#40e8a8;--dur:3.5s;--delay:0.7s;--max-op:0.7;"></div>
+      </div>
+      <div class="zone-inner">
+        <div class="depth-marker">
+          <div class="depth-top">1,000 m</div>
+          <div class="depth-bottom">↓ 4,000 m</div>
+        </div>
+        <div class="zone-visual">
+          <svg viewBox="0 0 90 80">
+            <!-- anglerfish -->
+            <g class="anim-bob" style="animation-delay:1.2s">
+              <!-- lure -->
+              <path d="M58 22 Q62 14 64 10" fill="none" stroke="#1a2030" stroke-width="1.5"/>
+              <circle cx="64" cy="8" r="5" fill="#70f0b0" opacity="0.25">
+                <animate attributeName="r" values="5;9;5" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.15;0.35;0.15" dur="2s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="64" cy="8" r="3" fill="#90ffcc" opacity="0.7">
+                <animate attributeName="r" values="2.5;4;2.5" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="64" cy="8" r="1.5" fill="#dfffee" opacity="0.9"/>
+              <!-- body -->
+              <ellipse cx="45" cy="46" rx="32" ry="20" fill="#060c14" opacity="0.95"/>
+              <!-- eye -->
+              <circle cx="28" cy="40" r="7" fill="#030a10"/>
+              <circle cx="28" cy="40" r="4" fill="#0a2030"/>
+              <circle cx="26" cy="38" r="1.5" fill="#2a6080" opacity="0.6"/>
+              <!-- teeth -->
+              <path d="M14 50 L17 58 L20 50" fill="#0a1520" opacity="0.9"/>
+              <path d="M21 52 L24 61 L27 53" fill="#0a1520" opacity="0.8"/>
+              <!-- fin -->
+              <path d="M68 36 Q78 30 82 42 Q76 48 68 46Z" fill="#050a12" opacity="0.7"/>
+            </g>
+          </svg>
+        </div>
+        <div class="zone-text">
+          <div class="zone-name-label">Midnight zone</div>
+          <div class="zone-sub-label">Bathypelagic · 1,000–4,000 m</div>
+          <div class="zone-teaser">Total darkness. Crushing pressure. Life glows to hunt, lure, and hide.</div>
+        </div>
+      </div>
+    </div>
+    <div class="zone-divider"></div>
+
+    <!-- ABYSSAL ZONE -->
+    <div class="zone-band" data-zone="aby" onclick="selectZone('aby')">
+      <div class="particles">
+        <div class="p-dot" style="width:2px;height:2px;left:75%;top:35%;background:#30a0a0;--dur:6s;--delay:0.3s;--max-op:0.4;"></div>
+        <div class="p-dot" style="width:2px;height:2px;left:82%;top:65%;background:#20a080;--dur:5s;--delay:1.5s;--max-op:0.3;"></div>
+      </div>
+      <div class="zone-inner">
+        <div class="depth-marker">
+          <div class="depth-top">4,000 m</div>
+          <div class="depth-bottom">↓ 6,000 m</div>
+        </div>
+        <div class="zone-visual">
+          <svg viewBox="0 0 90 80">
+            <!-- sea cucumber / isopod -->
+            <g class="anim-bob" style="animation-delay:2s">
+              <ellipse cx="45" cy="46" rx="34" ry="12" fill="#030810" opacity="0.9"/>
+              <!-- legs -->
+              <line x1="18" y1="46" x2="10" y2="36" stroke="#030810" stroke-width="1.5" opacity="0.7"/>
+              <line x1="26" y1="44" x2="20" y2="33" stroke="#030810" stroke-width="1.5" opacity="0.7"/>
+              <line x1="36" y1="42" x2="32" y2="30" stroke="#030810" stroke-width="1.4" opacity="0.6"/>
+              <line x1="54" y1="42" x2="58" y2="30" stroke="#030810" stroke-width="1.4" opacity="0.6"/>
+              <line x1="64" y1="44" x2="70" y2="33" stroke="#030810" stroke-width="1.5" opacity="0.7"/>
+              <line x1="72" y1="46" x2="80" y2="36" stroke="#030810" stroke-width="1.5" opacity="0.7"/>
+              <circle cx="76" cy="44" r="3" fill="#050c18" opacity="0.8"/>
+            </g>
+            <!-- vent shimmer hint -->
+            <path d="M10 72 Q20 68 30 72 Q40 68 50 72" fill="none" stroke="#1a4040" stroke-width="0.8" opacity="0.4"/>
+            <path d="M50 72 Q60 68 70 72 Q78 70 82 72" fill="none" stroke="#1a4040" stroke-width="0.8" opacity="0.3"/>
+          </svg>
+        </div>
+        <div class="zone-text">
+          <div class="zone-name-label">Abyssal zone</div>
+          <div class="zone-sub-label">Abyssopelagic · 4,000–6,000 m</div>
+          <div class="zone-teaser">Vast cold plains cover 54% of Earth's surface. Some life clusters around hydrothermal vents.</div>
+        </div>
+      </div>
+    </div>
+    <div class="zone-divider"></div>
+
+    <!-- HADAL ZONE -->
+    <div class="zone-band" data-zone="had" onclick="selectZone('had')">
+      <div class="zone-inner">
+        <div class="depth-marker">
+          <div class="depth-top">6,000 m</div>
+          <div class="depth-bottom">↓ 11,000 m</div>
+        </div>
+        <div class="zone-visual">
+          <svg viewBox="0 0 90 80">
+            <!-- hadal amphipod -->
+            <g class="anim-bob" style="animation-delay:3s">
+              <ellipse cx="45" cy="45" rx="22" ry="8" fill="#020508" opacity="0.9"/>
+              <!-- antennae -->
+              <line x1="26" y1="40" x2="14" y2="28" stroke="#020508" stroke-width="1" opacity="0.7"/>
+              <line x1="30" y1="38" x2="22" y2="24" stroke="#020508" stroke-width="1" opacity="0.6"/>
+              <!-- legs -->
+              <line x1="32" y1="48" x2="26" y2="57" stroke="#020508" stroke-width="1" opacity="0.7"/>
+              <line x1="38" y1="50" x2="34" y2="60" stroke="#020508" stroke-width="1" opacity="0.6"/>
+              <line x1="45" y1="52" x2="43" y2="62" stroke="#020508" stroke-width="1" opacity="0.5"/>
+              <line x1="52" y1="52" x2="54" y2="62" stroke="#020508" stroke-width="1" opacity="0.5"/>
+              <line x1="58" y1="50" x2="62" y2="60" stroke="#020508" stroke-width="1" opacity="0.6"/>
+              <line x1="64" y1="48" x2="70" y2="57" stroke="#020508" stroke-width="1" opacity="0.7"/>
+            </g>
+            <!-- trench wall hint -->
+            <path d="M4 74 L4 60 Q8 56 12 60 L12 74Z" fill="#020406" opacity="0.5"/>
+            <path d="M76 74 L76 58 Q80 54 84 58 L84 74Z" fill="#020406" opacity="0.5"/>
+          </svg>
+        </div>
+        <div class="zone-text">
+          <div class="zone-name-label">Hadal zone</div>
+          <div class="zone-sub-label">Hadalpelagic · 6,000–11,000 m</div>
+          <div class="zone-teaser">Ocean trenches only. Pressure >1,100 atm. Amphipods thrive in extraordinary abundance.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /depth-col -->
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="dp-prompt" id="dp-prompt">Select a<br>depth zone<br>to explore</div>
+    <div id="dp-content" style="display:none; display:flex; flex-direction:column; gap:18px;">
+      <div>
+        <div class="dp-zone-name" id="dp-name">—</div>
+        <div class="dp-depth" id="dp-depth">—</div>
+        <div class="dp-temp" id="dp-temp">—</div>
+      </div>
+      <div class="dp-desc" id="dp-desc">—</div>
+      <div>
+        <div class="dp-species-label">Key species</div>
+        <div class="dp-species-list" id="dp-species"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Data: NOAA · Woods Hole Oceanographic Institution · Census of Marine Life
+</footer>
+
+<script>
+const ZONES = {
+  sun: {
+    name: 'Sunlight zone',
+    depth: 'EPIPELAGIC · 0–200 m',
+    temp: 'Temp: 4–30°C',
+    desc: 'The only zone where sunlight penetrates enough for photosynthesis. Produces ~50% of Earth\'s oxygen through phytoplankton. Highest biodiversity of any ocean layer — home to most commercially fished species, marine mammals, sea turtles, and coastal coral reefs.',
+    species: ['Dolphins & whales', 'Bluefin tuna', 'Manta rays', 'Sea turtles', 'Jellyfish', 'Phytoplankton']
+  },
+  twi: {
+    name: 'Twilight zone',
+    depth: 'MESOPELAGIC · 200–1,000 m',
+    temp: 'Temp: 4–20°C',
+    desc: 'Dim blue light filters down but not enough for photosynthesis. Many animals here are transparent or deep red — which appears black at depth. The daily vertical migration — billions of animals rising to feed at night, sinking by day — is the largest animal migration on Earth.',
+    species: ['Lanternfish', 'Hatchetfish', 'Firefly squid', 'Dragonfish', 'Siphonophores']
+  },
+  mid: {
+    name: 'Midnight zone',
+    depth: 'BATHYPELAGIC · 1,000–4,000 m',
+    temp: 'Temp: 2–4°C',
+    desc: 'Absolutely no sunlight. Crushing pressures up to 400 atm. Animals generate their own light (bioluminescence) for hunting, communication, and camouflage. Organic matter drifting from above — called "marine snow" — is the primary food source.',
+    species: ['Anglerfish', 'Viperfish', 'Giant squid', 'Vampire squid', 'Deep-sea jellyfish']
+  },
+  aby: {
+    name: 'Abyssal zone',
+    depth: 'ABYSSOPELAGIC · 4,000–6,000 m',
+    temp: 'Temp: 0–3°C',
+    desc: 'Vast abyssal plains cover 54% of Earth\'s surface. Near-freezing temperatures, near-total darkness, extreme pressure. Life is sparse but remarkable communities form around hydrothermal vents, fuelled by chemosynthesis rather than sunlight.',
+    species: ['Sea cucumbers', 'Giant isopods', 'Abyssal grenadier', 'Foraminifera', 'Sea spiders', 'Dumbo octopus']
+  },
+  had: {
+    name: 'Hadal zone',
+    depth: 'HADALPELAGIC · 6,000–11,000 m',
+    temp: 'Temp: 1–4°C',
+    desc: 'Found only in ocean trenches — the Mariana Trench reaches 11,034 m. Pressure exceeds 1,100 atm. Despite the extreme environment, diverse microbial communities thrive, and amphipod crustaceans are found in extraordinary abundance, feeding on organic matter that sinks from above.',
+    species: ['Hadal amphipods', 'Snailfish (Pseudoliparis)', 'Polychaete worms', 'Foraminifera', 'Xenophyophores']
+  }
+};
+
+function selectZone(key) {
+  const z = ZONES[key];
+  // Update panel
+  document.getElementById('dp-prompt').style.display = 'none';
+  const content = document.getElementById('dp-content');
+  content.style.display = 'flex';
+
+  document.getElementById('dp-name').textContent = z.name;
+  document.getElementById('dp-depth').textContent = z.depth;
+  document.getElementById('dp-temp').textContent = z.temp;
+  document.getElementById('dp-desc').textContent = z.desc;
+  document.getElementById('dp-species').innerHTML = z.species
+    .map(s => `<div class="dp-species-item">${s}</div>`).join('');
+
+  // Update active band
+  document.querySelectorAll('.zone-band').forEach(b => {
+    b.classList.toggle('active', b.dataset.zone === key);
+  });
+}
+
+// init
+selectZone('sun');
+
+/* ── THEME TOGGLE ── */
+const html = document.documentElement;
+const themeLabel = document.getElementById('toggle-label');
+
+// Persist preference
+const saved = localStorage.getItem('atlas-theme') || 'dark';
+setTheme(saved);
+
+document.querySelector('.theme-toggle').addEventListener('click', () => {
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  setTheme(next);
+});
+
+function setTheme(t) {
+  html.dataset.theme = t;
+  themeLabel.textContent = t === 'dark' ? 'Dark' : 'Light';
+  localStorage.setItem('atlas-theme', t);
+}
+</script>
+</body>
+</html>

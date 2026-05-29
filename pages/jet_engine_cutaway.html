@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turbofan Engine — Cutaway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root[data-theme="dark"] {
+    --paper: #07090f;
+    --ink-dark: #f0ece0;
+    --ink: #d0c8b8;
+    --ink-mid: #a89880;
+    --ink-light: #6a5a48;
+    --ink-faint: #3a3028;
+    --line: rgba(255,255,255,0.1);
+    --line-strong: rgba(201,169,110,0.25);
+    --gold: #c9a96e;
+    --gold-light: #e8c898;
+    --gold-faint: rgba(201,169,110,0.12);
+    --blue-dark: #1a3050;
+    --blue: #2a5090;
+    --blue-light: #4a7ab0;
+    --red: #b83828;
+    --red-hot: #e85040;
+    --amber: #d48a38;
+    --amber-light: #f0a850;
+    --grid: rgba(201,169,110,0.03);
+  }
+
+  :root[data-theme="light"] {
+    --paper: #f5f0e8;
+    --ink-dark: #1a1208;
+    --ink: #2a1e0a;
+    --ink-mid: #4a3820;
+    --ink-light: #8a7050;
+    --ink-faint: #c8b890;
+    --line: rgba(60,40,10,0.15);
+    --line-strong: rgba(60,40,10,0.3);
+    --gold: #b8860a;
+    --gold-light: #d4a820;
+    --gold-faint: rgba(184,134,10,0.12);
+    --blue-dark: #0a1e3a;
+    --blue: #1a3a6a;
+    --blue-light: #2a5090;
+    --red: #8a1808;
+    --red-hot: #c83010;
+    --amber: #b85a08;
+    --amber-light: #e07820;
+    --grid: rgba(60,40,10,0.06);
+  }
+
+  html { scroll-behavior: smooth; transition: background 0.35s, color 0.35s; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── THEME TOGGLE ── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle-track {
+    width: 38px;
+    height: 20px;
+    background: rgba(201,169,110,0.1);
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.3s;
+    border: 1px solid var(--line);
+  }
+  .toggle-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    transition: transform 0.3s, background 0.3s;
+  }
+  [data-theme="light"] .toggle-knob { transform: translateX(18px); }
+  .toggle-label {
+    font-size: 10px;
+    color: var(--ink-light);
+    letter-spacing: 0.1em;
+    width: 28px;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 40px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--ink-dark);
+  }
+  .header-left {}
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 6vw, 60px);
+    letter-spacing: 0.05em;
+    line-height: 0.9;
+    color: var(--ink-dark);
+    margin-bottom: 6px;
+  }
+  .header-sub {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-top: 6px;
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 9px;
+    color: var(--ink-light);
+    letter-spacing: 0.1em;
+    line-height: 2;
+  }
+  .header-meta strong {
+    color: var(--gold);
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── CALLOUT BADGE ── */
+  .badge {
+    display: inline-block;
+    background: var(--ink-dark);
+    color: var(--paper);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    margin-bottom: 4px;
+  }
+
+  /* ── ENGINE DIAGRAM ── */
+  .engine-wrap {
+    position: relative;
+    margin-bottom: 6px;
+    background: rgba(255,250,240,0.6);
+    border: 1px solid var(--line-strong);
+    padding: 12px 8px 4px;
+  }
+  .engine-wrap svg {
+    width: 100%;
+    display: block;
+  }
+
+  /* flow animation */
+  @keyframes flowRight {
+    to { stroke-dashoffset: -24; }
+  }
+  .flow-line {
+    stroke-dasharray: 8 6;
+    animation: flowRight 0.9s linear infinite;
+  }
+  .flow-hot {
+    stroke-dasharray: 8 6;
+    animation: flowRight 0.6s linear infinite;
+  }
+
+  /* Section hover interaction */
+  .eng-sec {
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .eng-sec:hover { opacity: 0.85; }
+  .eng-sec.active .sec-highlight { opacity: 1 !important; }
+
+  /* ── CAPTION STRIP ── */
+  .caption-strip {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--line-strong);
+    border-top: none;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .cs-label {
+    background: var(--ink-dark);
+    color: var(--paper);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    padding: 12px 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+  .cs-content {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cs-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.06em;
+    color: var(--ink-dark);
+    line-height: 1;
+  }
+  .cs-desc {
+    font-size: 11.5px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+  .cs-prompt {
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-style: italic;
+    padding: 14px 0;
+  }
+
+  /* ── STAGE BUTTONS ── */
+  .stages-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .stage-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink-mid);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .stage-btn:hover {
+    background: var(--ink-faint);
+    border-color: var(--ink-mid);
+    color: var(--ink-dark);
+  }
+  .stage-btn.active {
+    background: var(--ink-dark);
+    border-color: var(--ink-dark);
+    color: var(--paper);
+  }
+
+  /* ── SPEC GRID ── */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--line-strong);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .spec-item {
+    padding: 14px 16px;
+    border-right: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .spec-item:nth-child(3n) { border-right: none; }
+  .spec-item:nth-child(n+4) { border-bottom: none; }
+  .spec-key {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 4px;
+  }
+  .spec-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.04em;
+    color: var(--ink-dark);
+    line-height: 1;
+  }
+  .spec-unit {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mid);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  /* ── PROCESS STRIP ── */
+  .process-strip {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--line-strong);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .ps-item {
+    flex: 1;
+    padding: 12px 10px;
+    border-right: 1px solid var(--line-strong);
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ps-item:last-child { border-right: none; }
+  .ps-item:hover { background: var(--gold-faint); }
+  .ps-item.active { background: var(--gold-faint); }
+  .ps-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--ink-faint);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .ps-name {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    line-height: 1.4;
+  }
+  .ps-arrow {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    border-left: none;
+    border-bottom: none;
+    transform: translateY(-50%) rotate(45deg);
+    z-index: 2;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--line-strong);
+    font-size: 9px;
+    color: var(--ink-light);
+    letter-spacing: 0.1em;
+  }
+  .footer-ref { text-align: right; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 9px;
+    color: var(--ink-light);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .legend-swatch {
+    width: 24px;
+    height: 2px;
+    flex-shrink: 0;
+  }
+  .legend-swatch.air { background: var(--blue); }
+  .legend-swatch.bypass { background: var(--blue-light); opacity: 0.6; }
+  .legend-swatch.hot { background: var(--red-hot); }
+  .legend-swatch.dashed { background: none; border-bottom: 2px dashed var(--blue); }
+
+  @media (max-width: 600px) {
+    .spec-grid { grid-template-columns: repeat(2, 1fr); }
+    .spec-item:nth-child(2n) { border-right: none; }
+    .spec-item:nth-child(2n+1):not(:nth-child(2n)) { border-right: 1px solid var(--line-strong); }
+    .process-strip { flex-wrap: wrap; }
+    .ps-item { flex: 0 0 33.33%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-left">
+      <div class="badge">Technical reference</div>
+      <div class="header-title">Turbofan<br>Engine</div>
+      <div class="header-sub">High-bypass axial-flow · Brayton cycle</div>
+    </div>
+    <div class="header-meta">
+      <label class="theme-toggle" for="theme-cb" aria-label="Toggle theme">
+        <div class="toggle-track">
+          <div class="toggle-knob"></div>
+        </div>
+        <span class="toggle-label" id="toggle-label">Dark</span>
+      </label>
+      <input type="checkbox" id="theme-cb" style="display:none"/>
+      <strong>Rolls-Royce Trent 1000 type</strong>
+      Bypass ratio: ~10:1<br>
+      Thrust: 70,000–90,000 lbf<br>
+      Click any section to explore
+    </div>
+  </header>
+
+  <!-- ENGINE SVG DIAGRAM -->
+  <div class="engine-wrap">
+    <svg id="engine-svg" viewBox="0 0 820 290">
+      <defs>
+        <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 2L8 5L1 8" fill="none" stroke="#1a3a6a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <marker id="arr-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 2L8 5L1 8" fill="none" stroke="#c83010" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 2L8 5L1 8" fill="none" stroke="#b85a08" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+
+        <!-- hatching for hot sections -->
+        <pattern id="hatch-hot" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#6a2008" stroke-width="0.6" opacity="0.4"/>
+        </pattern>
+        <pattern id="hatch-comp" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#0a1e3a" stroke-width="0.6" opacity="0.3"/>
+        </pattern>
+
+        <filter id="sel-glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+      </defs>
+
+      <!-- ════ OUTER NACELLE ════ -->
+      <path d="M40 118 Q40 38 140 38 L640 38 Q715 38 738 160 Q715 280 640 280 L140 280 Q40 280 40 198 Z"
+            fill="#ede8dc" stroke="#2a1e0a" stroke-width="1.2"/>
+
+      <!-- nacelle interior -->
+      <path d="M78 70 L625 70 Q686 70 710 160 Q686 248 625 248 L78 248 Q54 248 52 198 L52 118 Q54 70 78 70Z"
+            fill="#e8e0d0" stroke="#3a2e18" stroke-width="0.6"/>
+
+      <!-- bypass duct shading -->
+      <path d="M145 72 L625 72 Q680 72 702 160 Q680 246 625 246 L145 246 Q90 246 88 198 L88 118 Q90 72 145 72Z"
+            fill="#ddd5c0" stroke="none"/>
+
+      <!-- core tube -->
+      <rect x="145" y="116" width="510" height="88" rx="4" fill="#d0c8b0" stroke="#3a2e18" stroke-width="0.8"/>
+
+      <!-- Core tube inner shading -->
+      <rect x="145" y="116" width="510" height="88" rx="4" fill="url(#hatch-comp)" opacity="0.4"/>
+
+      <!-- ════ BYPASS FLOW ════ -->
+      <line class="flow-line" x1="165" y1="88" x2="620" y2="88" stroke="#1a3a6a" stroke-width="1.2" opacity="0.5" marker-end="url(#arr-blue)"/>
+      <text font-family="IBM Plex Mono,monospace" font-size="9" fill="#1a3a6a" x="388" y="83" text-anchor="middle" opacity="0.7" letter-spacing="0.06em">BYPASS AIRFLOW — 80% OF THRUST</text>
+
+      <!-- bypass bottom -->
+      <line class="flow-line" x1="165" y1="234" x2="620" y2="234" stroke="#1a3a6a" stroke-width="1.2" opacity="0.4" marker-end="url(#arr-blue)"/>
+
+      <!-- air intake arrow -->
+      <line class="flow-line" x1="20" y1="160" x2="70" y2="160" stroke="#1a3a6a" stroke-width="2" marker-end="url(#arr-blue)"/>
+      <text font-family="IBM Plex Mono,monospace" font-size="9" fill="#1a3a6a" x="10" y="148" text-anchor="middle" letter-spacing="0.06em">AIR</text>
+      <text font-family="IBM Plex Mono,monospace" font-size="9" fill="#1a3a6a" x="10" y="160" text-anchor="middle" letter-spacing="0.06em">IN</text>
+
+      <!-- exhaust -->
+      <line class="flow-hot" x1="745" y1="160" x2="795" y2="160" stroke="#c83010" stroke-width="2.2" marker-end="url(#arr-red)"/>
+      <text font-family="IBM Plex Mono,monospace" font-size="9" fill="#c83010" x="808" y="153" text-anchor="middle" letter-spacing="0.06em">HOT</text>
+      <text font-family="IBM Plex Mono,monospace" font-size="9" fill="#c83010" x="808" y="168" text-anchor="middle" letter-spacing="0.06em">GAS</text>
+
+      <!-- ════ SECTION: FAN ════ -->
+      <g class="eng-sec" id="sec-fan" onclick="selectSec('fan')">
+        <rect x="79" y="74" width="64" height="172" rx="3" fill="#b8c8e0" stroke="#1a3a6a" stroke-width="0.8"/>
+        <rect x="79" y="74" width="64" height="172" rx="3" fill="url(#hatch-comp)"/>
+        <!-- fan blade lines (horizontal) -->
+        <line x1="79" y1="96" x2="143" y2="96" stroke="#1a3a6a" stroke-width="1" opacity="0.5"/>
+        <line x1="79" y1="112" x2="143" y2="112" stroke="#1a3a6a" stroke-width="1.5" opacity="0.6"/>
+        <line x1="79" y1="128" x2="143" y2="128" stroke="#1a3a6a" stroke-width="1" opacity="0.5"/>
+        <line x1="79" y1="144" x2="143" y2="144" stroke="#1a3a6a" stroke-width="1.5" opacity="0.6"/>
+        <line x1="79" y1="160" x2="143" y2="160" stroke="#1a3a6a" stroke-width="1" opacity="0.5"/>
+        <line x1="79" y1="176" x2="143" y2="176" stroke="#1a3a6a" stroke-width="1.5" opacity="0.6"/>
+        <line x1="79" y1="192" x2="143" y2="192" stroke="#1a3a6a" stroke-width="1" opacity="0.5"/>
+        <line x1="79" y1="208" x2="143" y2="208" stroke="#1a3a6a" stroke-width="1.5" opacity="0.6"/>
+        <line x1="79" y1="224" x2="143" y2="224" stroke="#1a3a6a" stroke-width="1" opacity="0.5"/>
+        <!-- center shaft line -->
+        <line x1="111" y1="74" x2="111" y2="246" stroke="#1a3a6a" stroke-width="1" opacity="0.5"/>
+        <!-- label -->
+        <text font-family="Bebas Neue,sans-serif" font-size="13" fill="#0a1e3a" x="111" y="264" text-anchor="middle" letter-spacing="0.08em">Fan</text>
+        <!-- selection highlight -->
+        <rect class="sec-highlight" x="76" y="71" width="70" height="178" rx="4" fill="none" stroke="#b8860a" stroke-width="2" opacity="0"/>
+      </g>
+
+      <!-- ════ SECTION: LPC ════ -->
+      <g class="eng-sec" id="sec-lpc" onclick="selectSec('lpc')">
+        <rect x="145" y="118" width="80" height="84" rx="3" fill="#b0c0d8" stroke="#1a3a6a" stroke-width="0.6"/>
+        <rect x="145" y="118" width="80" height="84" rx="3" fill="url(#hatch-comp)" opacity="0.6"/>
+        <line x1="162" y1="118" x2="162" y2="202" stroke="#1a3a6a" stroke-width="0.7" opacity="0.5"/>
+        <line x1="178" y1="118" x2="178" y2="202" stroke="#1a3a6a" stroke-width="0.7" opacity="0.5"/>
+        <line x1="194" y1="118" x2="194" y2="202" stroke="#1a3a6a" stroke-width="0.7" opacity="0.5"/>
+        <line x1="210" y1="118" x2="210" y2="202" stroke="#1a3a6a" stroke-width="0.7" opacity="0.5"/>
+        <text font-family="Bebas Neue,sans-serif" font-size="11" fill="#0a1e3a" x="185" y="220" text-anchor="middle" letter-spacing="0.06em">LPC</text>
+        <rect class="sec-highlight" x="142" y="115" width="86" height="90" rx="3" fill="none" stroke="#b8860a" stroke-width="2" opacity="0"/>
+      </g>
+
+      <!-- ════ SECTION: HPC ════ -->
+      <g class="eng-sec" id="sec-hpc" onclick="selectSec('hpc')">
+        <rect x="227" y="118" width="108" height="84" rx="3" fill="#a0b4cc" stroke="#162d4e" stroke-width="0.6"/>
+        <rect x="227" y="118" width="108" height="84" rx="3" fill="url(#hatch-comp)" opacity="0.7"/>
+        <line x1="244" y1="118" x2="244" y2="202" stroke="#162d4e" stroke-width="0.6" opacity="0.5"/>
+        <line x1="260" y1="118" x2="260" y2="202" stroke="#162d4e" stroke-width="0.6" opacity="0.5"/>
+        <line x1="276" y1="118" x2="276" y2="202" stroke="#162d4e" stroke-width="0.6" opacity="0.5"/>
+        <line x1="292" y1="118" x2="292" y2="202" stroke="#162d4e" stroke-width="0.6" opacity="0.5"/>
+        <line x1="308" y1="118" x2="308" y2="202" stroke="#162d4e" stroke-width="0.6" opacity="0.5"/>
+        <line x1="324" y1="118" x2="324" y2="202" stroke="#162d4e" stroke-width="0.6" opacity="0.5"/>
+        <text font-family="Bebas Neue,sans-serif" font-size="11" fill="#0a1e3a" x="281" y="220" text-anchor="middle" letter-spacing="0.06em">HPC</text>
+        <rect class="sec-highlight" x="224" y="115" width="114" height="90" rx="3" fill="none" stroke="#b8860a" stroke-width="2" opacity="0"/>
+      </g>
+
+      <!-- ════ SECTION: COMBUSTOR ════ -->
+      <g class="eng-sec" id="sec-comb" onclick="selectSec('comb')">
+        <rect x="337" y="116" width="112" height="88" rx="4" fill="#c87030" stroke="#7a3010" stroke-width="0.8"/>
+        <rect x="337" y="116" width="112" height="88" rx="4" fill="url(#hatch-hot)"/>
+        <!-- flame shapes -->
+        <path d="M358 190 Q364 158 370 175 Q376 148 382 190Z" fill="#e85010" opacity="0.7"/>
+        <path d="M383 190 Q389 155 395 170 Q401 142 407 190Z" fill="#c87020" opacity="0.7"/>
+        <path d="M408 190 Q413 160 418 174 Q422 147 427 190Z" fill="#e85010" opacity="0.65"/>
+        <!-- orange glow -->
+        <rect x="337" y="116" width="112" height="88" rx="4" fill="#ff5500" opacity="0.06"/>
+        <text font-family="Bebas Neue,sans-serif" font-size="11" fill="#7a3010" x="393" y="222" text-anchor="middle" letter-spacing="0.06em">Combustor</text>
+        <rect class="sec-highlight" x="334" y="113" width="118" height="94" rx="4" fill="none" stroke="#b8860a" stroke-width="2" opacity="0"/>
+      </g>
+
+      <!-- ════ SECTION: HPT ════ -->
+      <g class="eng-sec" id="sec-hpt" onclick="selectSec('hpt')">
+        <rect x="451" y="118" width="78" height="84" rx="3" fill="#c09050" stroke="#6a3010" stroke-width="0.6"/>
+        <rect x="451" y="118" width="78" height="84" rx="3" fill="url(#hatch-hot)" opacity="0.8"/>
+        <line x1="467" y1="118" x2="467" y2="202" stroke="#6a3010" stroke-width="0.7" opacity="0.5"/>
+        <line x1="483" y1="118" x2="483" y2="202" stroke="#6a3010" stroke-width="0.7" opacity="0.5"/>
+        <line x1="499" y1="118" x2="499" y2="202" stroke="#6a3010" stroke-width="0.7" opacity="0.5"/>
+        <line x1="515" y1="118" x2="515" y2="202" stroke="#6a3010" stroke-width="0.7" opacity="0.5"/>
+        <text font-family="Bebas Neue,sans-serif" font-size="11" fill="#4a2008" x="490" y="220" text-anchor="middle" letter-spacing="0.06em">HPT</text>
+        <rect class="sec-highlight" x="448" y="115" width="84" height="90" rx="3" fill="none" stroke="#b8860a" stroke-width="2" opacity="0"/>
+      </g>
+
+      <!-- ════ SECTION: LPT ════ -->
+      <g class="eng-sec" id="sec-lpt" onclick="selectSec('lpt')">
+        <rect x="531" y="118" width="114" height="84" rx="3" fill="#b08040" stroke="#5a2808" stroke-width="0.6"/>
+        <rect x="531" y="118" width="114" height="84" rx="3" fill="url(#hatch-hot)" opacity="0.6"/>
+        <line x1="548" y1="118" x2="548" y2="202" stroke="#5a2808" stroke-width="0.6" opacity="0.5"/>
+        <line x1="564" y1="118" x2="564" y2="202" stroke="#5a2808" stroke-width="0.6" opacity="0.5"/>
+        <line x1="580" y1="118" x2="580" y2="202" stroke="#5a2808" stroke-width="0.6" opacity="0.5"/>
+        <line x1="596" y1="118" x2="596" y2="202" stroke="#5a2808" stroke-width="0.6" opacity="0.5"/>
+        <line x1="612" y1="118" x2="612" y2="202" stroke="#5a2808" stroke-width="0.6" opacity="0.5"/>
+        <line x1="628" y1="118" x2="628" y2="202" stroke="#5a2808" stroke-width="0.6" opacity="0.5"/>
+        <text font-family="Bebas Neue,sans-serif" font-size="11" fill="#3a1a06" x="588" y="220" text-anchor="middle" letter-spacing="0.06em">LPT</text>
+        <rect class="sec-highlight" x="528" y="115" width="120" height="90" rx="3" fill="none" stroke="#b8860a" stroke-width="2" opacity="0"/>
+      </g>
+
+      <!-- ════ SECTION: NOZZLE ════ -->
+      <g class="eng-sec" id="sec-noz" onclick="selectSec('noz')">
+        <path d="M647 116 L720 136 L720 184 L647 202Z" fill="#a07040" stroke="#5a3010" stroke-width="0.8"/>
+        <path d="M647 116 L720 136 L720 184 L647 202Z" fill="url(#hatch-hot)" opacity="0.5"/>
+        <text font-family="Bebas Neue,sans-serif" font-size="11" fill="#3a1a06" x="688" y="222" text-anchor="middle" letter-spacing="0.06em">Nozzle</text>
+        <path class="sec-highlight" d="M644 113 L724 133 L724 187 L644 205Z" fill="none" stroke="#b8860a" stroke-width="2" opacity="0"/>
+      </g>
+
+      <!-- ── CALLOUT LINES ── -->
+      <!-- Fan label line -->
+      <line x1="111" y1="38" x2="111" y2="72" stroke="#2a1e0a" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.4"/>
+      <!-- Combustor temp annotation -->
+      <line x1="393" y1="116" x2="393" y2="100" stroke="#7a3010" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.5"/>
+      <text font-family="IBM Plex Mono,monospace" font-size="8" fill="#7a3010" x="393" y="97" text-anchor="middle" opacity="0.7" letter-spacing="0.06em">~2000°C</text>
+
+      <!-- Shaft lines (dashed, connecting turbines to compressors) -->
+      <line x1="155" y1="160" x2="649" y2="160" stroke="#2a1e0a" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.2"/>
+
+    </svg>
+  </div>
+
+  <!-- FLOW LEGEND -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch air"></div>
+      Inlet air
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch bypass"></div>
+      Bypass flow (cold)
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch hot"></div>
+      Exhaust (hot)
+    </div>
+    <div class="legend-item" style="color:var(--gold);">
+      ◇ Gold border = selected section
+    </div>
+  </div>
+
+  <!-- STAGE BUTTONS -->
+  <div class="stages-row">
+    <button class="stage-btn" onclick="selectSec('fan')">Fan</button>
+    <button class="stage-btn" onclick="selectSec('lpc')">LPC</button>
+    <button class="stage-btn" onclick="selectSec('hpc')">HPC</button>
+    <button class="stage-btn" onclick="selectSec('comb')">Combustor</button>
+    <button class="stage-btn" onclick="selectSec('hpt')">HPT</button>
+    <button class="stage-btn" onclick="selectSec('lpt')">LPT</button>
+    <button class="stage-btn" onclick="selectSec('noz')">Nozzle</button>
+  </div>
+
+  <!-- DETAIL CAPTION -->
+  <div class="caption-strip" id="caption-strip">
+    <div class="cs-label">Section detail</div>
+    <div class="cs-content">
+      <div class="cs-prompt" id="cs-prompt">Click any section above or select a stage button to explore the engine cycle.</div>
+      <div id="cs-detail" style="display:none">
+        <div class="cs-name" id="cs-name">—</div>
+        <div class="cs-desc" id="cs-desc">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THERMODYNAMIC PROCESS -->
+  <div style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px;">Brayton cycle stages</div>
+  <div class="process-strip">
+    <div class="ps-item" onclick="selectSec('fan')">
+      <div class="ps-num">01</div>
+      <div class="ps-name">Intake &amp; bypass</div>
+    </div>
+    <div class="ps-item" onclick="selectSec('lpc')">
+      <div class="ps-num">02</div>
+      <div class="ps-name">Low compression</div>
+    </div>
+    <div class="ps-item" onclick="selectSec('hpc')">
+      <div class="ps-num">03</div>
+      <div class="ps-name">High compression</div>
+    </div>
+    <div class="ps-item" onclick="selectSec('comb')">
+      <div class="ps-num">04</div>
+      <div class="ps-name">Combustion</div>
+    </div>
+    <div class="ps-item" onclick="selectSec('hpt')">
+      <div class="ps-num">05</div>
+      <div class="ps-name">High expansion</div>
+    </div>
+    <div class="ps-item" onclick="selectSec('lpt')">
+      <div class="ps-num">06</div>
+      <div class="ps-name">Low expansion</div>
+    </div>
+    <div class="ps-item" onclick="selectSec('noz')">
+      <div class="ps-num">07</div>
+      <div class="ps-name">Exhaust thrust</div>
+    </div>
+  </div>
+
+  <!-- SPEC GRID -->
+  <div style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px;">Key specifications</div>
+  <div class="spec-grid">
+    <div class="spec-item">
+      <div class="spec-key">Bypass ratio</div>
+      <div class="spec-val">10:1</div>
+      <div class="spec-unit">fan to core airflow</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-key">Max thrust</div>
+      <div class="spec-val">90,000</div>
+      <div class="spec-unit">lbf (400 kN)</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-key">Fan diameter</div>
+      <div class="spec-val">~3 m</div>
+      <div class="spec-unit">~118 inches</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-key">Combustor temp</div>
+      <div class="spec-val">2000°C</div>
+      <div class="spec-unit">turbine inlet</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-key">HPC pressure ratio</div>
+      <div class="spec-val">40×</div>
+      <div class="spec-unit">atmospheric</div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-key">Thermal efficiency</div>
+      <div class="spec-val">~55%</div>
+      <div class="spec-unit">overall</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Brayton cycle · axial-flow turbomachinery</span>
+    <span class="footer-ref">Ref: RR Trent 1000 · Pratt &amp; Whitney PW1000G type</span>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+const INFO = {
+  fan: {
+    name: 'Fan',
+    desc: 'The massive front fan — up to 3 m diameter — ingests huge volumes of air. Around 80% bypasses the core entirely, flowing around the engine to generate most of the thrust quietly and efficiently. Only ~20% enters the core for combustion. Fan blades are wide-chord titanium-alloy hollow aerofoils designed to withstand bird strikes.',
+    svg: { x:76, y:71, w:70, h:178, shape:'rect' }
+  },
+  lpc: {
+    name: 'Low-pressure compressor (LPC)',
+    desc: 'Multi-stage axial compressor driven by the low-pressure turbine shaft. Squeezes incoming air to roughly 4× atmospheric pressure using alternating rows of rotating blades and fixed stators, progressively raising temperature and density before the air reaches the HPC.',
+    svg: { x:142, y:115, w:86, h:90, shape:'rect' }
+  },
+  hpc: {
+    name: 'High-pressure compressor (HPC)',
+    desc: 'The HPC continues compression to ~40× atmospheric pressure overall. Driven by the high-pressure turbine on a concentric inner shaft, its titanium and nickel alloy blades spin at up to 12,000 RPM. Air exits at ~500°C before any combustion has even occurred.',
+    svg: { x:224, y:115, w:114, h:90, shape:'rect' }
+  },
+  comb: {
+    name: 'Combustion chamber',
+    desc: 'Compressed air mixes with atomised jet fuel (Jet-A) and ignites at ~2,000°C. The annular combustor burns continuously — the igniter spark plug is only needed at startup. Hundreds of precisely angled cooling holes prevent the surrounding metal from melting, keeping metal temperatures below 1,100°C.',
+    svg: { x:334, y:113, w:118, h:94, shape:'rect' }
+  },
+  hpt: {
+    name: 'High-pressure turbine (HPT)',
+    desc: 'Single or dual stage turbine immediately after the combustor. Extracts energy from the white-hot gases to drive the HPC via a concentric shaft. Blades are cast from directionally-solidified or single-crystal nickel superalloys and cooled internally by intricate serpentine air channels — without which they would melt.',
+    svg: { x:448, y:115, w:84, h:90, shape:'rect' }
+  },
+  lpt: {
+    name: 'Low-pressure turbine (LPT)',
+    desc: 'Multiple stages extract remaining thermal energy from the gas flow to drive both the fan and LPC through the low-pressure shaft. The LPT is the largest turbine section — slower, cooler, and with bigger blades than the HPT. It powers the fan, which generates ~80% of total thrust.',
+    svg: { x:528, y:115, w:120, h:90, shape:'rect' }
+  },
+  noz: {
+    name: 'Exhaust nozzle',
+    desc: "The convergent nozzle accelerates exhaust gases to high velocity, generating thrust by Newton's third law. On high-bypass turbofans, the bypass and core flows may mix here (mixed nozzle) or exit separately (unmixed). Exit temperatures reach 400–600°C — far cooler than the HPT inlet, but still radiating visible heat haze.",
+    svg: { x:644, y:113, shape:'path' }
+  }
+};
+
+let current = null;
+
+function selectSec(key) {
+  // hide all highlights
+  document.querySelectorAll('.sec-highlight').forEach(el => el.setAttribute('opacity','0'));
+
+  // show this one
+  const ring = document.querySelector(`#sec-${key} .sec-highlight`);
+  if (ring) ring.setAttribute('opacity','1');
+
+  // panel
+  document.getElementById('cs-prompt').style.display = 'none';
+  const detail = document.getElementById('cs-detail');
+  detail.style.display = 'block';
+  document.getElementById('cs-name').textContent = INFO[key].name;
+  document.getElementById('cs-desc').textContent = INFO[key].desc;
+
+  // buttons
+  document.querySelectorAll('.stage-btn').forEach(b => {
+    const matches = b.textContent.toLowerCase().replace(/[\s-]/g,'').includes(key) ||
+      (key==='comb' && b.textContent.includes('Combustor')) ||
+      (key==='lpc' && b.textContent === 'LPC') ||
+      (key==='hpc' && b.textContent === 'HPC') ||
+      (key==='hpt' && b.textContent === 'HPT') ||
+      (key==='lpt' && b.textContent === 'LPT') ||
+      (key==='noz' && b.textContent === 'Nozzle') ||
+      (key==='fan' && b.textContent === 'Fan');
+    b.classList.toggle('active', matches);
+  });
+
+  current = key;
+}
+
+/* ── THEME TOGGLE ── */
+const html = document.documentElement;
+const themeLabel = document.getElementById('toggle-label');
+
+// Persist preference
+const saved = localStorage.getItem('atlas-theme') || 'dark';
+setTheme(saved);
+
+document.querySelector('.theme-toggle').addEventListener('click', () => {
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  setTheme(next);
+});
+
+function setTheme(t) {
+  html.dataset.theme = t;
+  themeLabel.textContent = t === 'dark' ? 'Dark' : 'Light';
+  localStorage.setItem('atlas-theme', t);
+}
+</script>
+</body>
+</html>
